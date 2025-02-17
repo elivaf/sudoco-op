@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        table {
+            border-collapse: collapse;
+            margin: auto;
+        }
+        td {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: 1px solid #ccc;
+            font-size: 20px;
+            background-color: white;
+            position: relative;
+        }
+        td.filled {
+            background-color: #d4edda;
+        }
+        td.empty {
+            background-color: #f8d7da;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            font-size: 20px;
+            text-align: center;
+            border: none;
+            outline: none;
+            background: none;
+            appearance: none;
+            -moz-appearance: textfield;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        tr:nth-child(3) td, tr:nth-child(6) td {
+            border-bottom: 3px solid black;
+        }
+        td:nth-child(3), td:nth-child(6) {
+            border-right: 3px solid black;
+        }
+    </style>
+</head>
+<body>
+    <table id="board"></table>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        function renderBoard(board) {
+            const table = document.getElementById('board');
+            table.innerHTML = '';
+            board.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, colIndex) => {
+                    const td = document.createElement('td');
+                    td.className = cell === 0 ? 'empty' : 'filled';
+
+                    if (cell === 0) {
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.min = '1';
+                        input.max = '9';
+                        input.inputMode = "numeric"; 
+                        input.addEventListener('change', (e) => {
+                            const num = parseInt(e.target.value);
+                            if (num >= 1 && num <= 9) {
+                                socket.emit('make_move', { row: rowIndex, col: colIndex, num: num });
+                            }
+                            e.target.value = "";
+                        });
+                        td.appendChild(input);
+                    } else {
+                        td.textContent = cell;
+                    }
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+
+        socket.emit('get_board');
+        socket.on('send_board', (data) => {
+            renderBoard(data.board);
+        });
+    </script>
+</body>
+</html>
