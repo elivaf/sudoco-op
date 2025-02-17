@@ -1,8 +1,7 @@
-import eventlet
-eventlet.monkey_patch()
-
+import os
 import random
 import time
+import threading
 from copy import deepcopy
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
@@ -112,4 +111,5 @@ def handle_make_move(data):
                     emit('send_board', {'board': sudoku_game.values}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=10000, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port, debug=True)
