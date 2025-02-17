@@ -1,11 +1,14 @@
+import eventlet
+eventlet.monkey_patch()
+
 import random
-from copy import deepcopy
 import time
+from copy import deepcopy
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 class Grid:
     def __init__(self):
@@ -73,6 +76,10 @@ class Grid:
 
     def reset_if_needed(self):
         if time.time() - self.last_reset_time > 5:
+            print("\n============= Answer =============")  # Лог в консоль сервера
+            for row in self.filled:
+                print(" ".join(str(num) for num in row))
+            print("====================================\n")
             self.__init__()
             self.generate_sudoku(difficulty=60)
             self.last_reset_time = time.time()
@@ -105,4 +112,4 @@ def handle_make_move(data):
                     emit('send_board', {'board': sudoku_game.values}, broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=10000, allow_unsafe_werkzeug=True)
